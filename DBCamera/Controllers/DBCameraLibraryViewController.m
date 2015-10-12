@@ -63,7 +63,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
         _containersMapping = [NSMutableDictionary dictionary];
         _items = [NSMutableArray array];
         _libraryMaxImageSize = 1900;
-        
+
         [self setTintColor:[UIColor whiteColor]];
     }
     return self;
@@ -76,29 +76,29 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
     [self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:self.topContainerBar];
     [self.view addSubview:self.bottomContainerBar];
-    
+
     _pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
                                                           navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
                                                                         options:@{ UIPageViewControllerOptionInterPageSpacingKey :@0 }];
-    
+
     [_pageViewController setDelegate:self];
     [_pageViewController setDataSource:self];
     [self addChildViewController:_pageViewController];
     [self.view addSubview:_pageViewController.view];
-    
+
     [_pageViewController didMoveToParentViewController:self];
     [_pageViewController.view setFrame:(CGRect){ 0, CGRectGetMaxY(_topContainerBar.frame), CGRectGetWidth(self.view.bounds), CGRectGetHeight(self.view.bounds) - ( CGRectGetHeight(_topContainerBar.frame) + CGRectGetHeight(_bottomContainerBar.frame) ) }];
 
     [self.view addSubview:self.loading];
     [self.view setGestureRecognizers:_pageViewController.gestureRecognizers];
-	
+
 	[self loadLibraryGroups];
 }
 
 - (void) viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
+
 #if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
     [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationSlide];
 #endif
@@ -107,8 +107,8 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 - (void) viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    
-    
+
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:)
                                                  name:UIApplicationDidBecomeActiveNotification object:[UIApplication sharedApplication]];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:)
@@ -147,7 +147,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 {
     if ( _isEnumeratingGroups )
         return;
-    
+
     __weak NSMutableArray *blockItems = _items;
     __weak NSMutableDictionary *blockContainerMapping = _containersMapping;
     __weak typeof(self) blockSelf = self;
@@ -156,7 +156,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
     __block NSUInteger blockPresentationIndex = _presentationIndex;
     __block BOOL isEnumeratingGroupsBlock = _isEnumeratingGroups;
     isEnumeratingGroupsBlock = YES;
-    
+
     [[DBLibraryManager sharedInstance] loadGroupsAssetWithBlock:^(BOOL success, NSArray *items) {
         if ( success ) {
             [blockSelf.loading removeFromSuperview];
@@ -164,7 +164,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
                 [blockItems removeAllObjects];
                 [blockItems addObjectsFromArray:items];
                 [blockContainerMapping removeAllObjects];
-                
+
                 for ( NSUInteger i=0; i<blockItems.count; i++ ) {
                     DBCameraCollectionViewController *vc = [[DBCameraCollectionViewController alloc] initWithCollectionIdentifier:kItemIdentifier];
                     [vc setCurrentIndex:i];
@@ -172,16 +172,16 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
                     [vc setCollectionControllerDelegate:blockSelf];
                     [blockContainerMapping setObject:vc forKey:@(i)];
                 }
-                
+
                 NSInteger usedIndex = [blockSelf indexForSelectedItem];
-                blockPresentationIndex = usedIndex >= 0 ? usedIndex : 0;
+                blockPresentationIndex = usedIndex >= 1 ? usedIndex : 1;
                 [blockSelf setNavigationTitleAtIndex:blockPresentationIndex];
                 [blockSelf setSelectedItemID:blockItems[blockPresentationIndex][@"propertyID"]];
                 [pageViewControllerBlock setViewControllers:@[ blockContainerMapping[@(blockPresentationIndex)] ]
                                                   direction:UIPageViewControllerNavigationDirectionForward
                                                    animated:NO
                                                  completion:nil];
-                
+
                 [UIView animateWithDuration:.3 animations:^{
                     [pageViewControllerBlock.view setAlpha:1];
                 }];
@@ -191,7 +191,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
                 });
             }
         }
-        
+
         isEnumeratingGroupsBlock = NO;
     }];
 }
@@ -213,7 +213,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
             blockIndex = idx;
         }
     }];
-    
+
     return blockIndex;
 }
 
@@ -223,7 +223,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
         [self dismissViewControllerAnimated:YES completion:nil];
         return;
     }
-        
+
     [UIView animateWithDuration:.3 animations:^{
         [self.view setAlpha:0];
         [self.view setTransform:CGAffineTransformMakeScale(.8, .8)];
@@ -244,7 +244,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
         _loading = [[DBCameraLoadingView alloc] initWithFrame:(CGRect){ 0, 0, 100, 100 }];
         [_loading setCenter:self.view.center];
     }
-    
+
     return _loading;
 }
 
@@ -253,14 +253,14 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
     if ( !_topContainerBar ) {
         _topContainerBar = [[UIView alloc] initWithFrame:(CGRect){ 0, 0, CGRectGetWidth(self.view.bounds), 65 }];
         [_topContainerBar setBackgroundColor:RGBColor(0x000000, 1)];
-        
+
         UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [closeButton setBackgroundColor:[UIColor clearColor]];
         [closeButton setImage:[[UIImage imageNamed:@"close"] tintImageWithColor:self.tintColor] forState:UIControlStateNormal];
         [closeButton setFrame:(CGRect){ 10, 10, 45, 45 }];
         [closeButton addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
         [_topContainerBar addSubview:closeButton];
-        
+
         _titleLabel = [[UILabel alloc] initWithFrame:(CGRect){ CGRectGetMaxX(closeButton.frame), 0, CGRectGetWidth(self.view.bounds) - (CGRectGetWidth(closeButton.bounds) * 2), CGRectGetHeight(_topContainerBar.bounds) }];
         [_titleLabel setBackgroundColor:[UIColor clearColor]];
         [_titleLabel setTextColor:self.tintColor];
@@ -276,7 +276,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
     if ( !_bottomContainerBar ) {
         _bottomContainerBar = [[UIView alloc] initWithFrame:(CGRect){ 0, CGRectGetHeight(self.view.bounds) - 30, CGRectGetWidth(self.view.bounds), 30 }];
         [_bottomContainerBar setBackgroundColor:RGBColor(0x000000, 1)];
-        
+
         _pageLabel = [[UILabel alloc] initWithFrame:_bottomContainerBar.bounds ];
         [_pageLabel setBackgroundColor:[UIColor clearColor]];
         [_pageLabel setTextColor:self.tintColor];
@@ -284,7 +284,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
         [_pageLabel setTextAlignment:NSTextAlignmentCenter];
         [_bottomContainerBar addSubview:_pageLabel];
     }
-    
+
     return _bottomContainerBar;
 }
 
@@ -293,12 +293,12 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 - (UIViewController *) pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController
 {
     DBCameraCollectionViewController *vc = (DBCameraCollectionViewController *)viewController;
-    
+
     _vcIndex = vc.currentIndex;
-    
+
     if ( _vcIndex == 0 )
         return nil;
-    
+
     DBCameraCollectionViewController *beforeVc = _containersMapping[@(_vcIndex - 1)];
     [beforeVc.collectionView reloadData];
     return beforeVc;
@@ -308,10 +308,10 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 {
     DBCameraCollectionViewController *vc = (DBCameraCollectionViewController *)viewController;
     _vcIndex = vc.currentIndex;
-    
+
     if ( _vcIndex == (_items.count - 1) )
         return nil;
-    
+
     DBCameraCollectionViewController *nextVc = _containersMapping[@(_vcIndex + 1)];
     [nextVc.collectionView reloadData];
     return nextVc;
@@ -344,7 +344,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 
             UIImage *image = [UIImage imageForAsset:asset maxPixelSize:_libraryMaxImageSize];
 //            UIImage *image = [self test:asset];
-            
+
             if ( !weakSelf.useCameraSegue ) {
                 if ( [weakSelf.delegate respondsToSelector:@selector(camera:didFinishWithImage:withMetadata:)] )
                     [weakSelf.delegate camera:self didFinishWithImage:image withMetadata:metadata];
@@ -357,10 +357,10 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
                 [segue setCapturedImageMetadata:metadata];
                 [segue setDelegate:weakSelf.delegate];
                 [segue setCameraSegueConfigureBlock:self.cameraSegueConfigureBlock];
-                
+
                 [weakSelf.navigationController pushViewController:segue animated:YES];
             }
-            
+
             [weakSelf.loading removeFromSuperview];
         } failureBlock:nil];
     });
@@ -375,7 +375,7 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 //    // http://en.wikipedia.org/wiki/Extensible_Metadata_Platform
 //    // Have in mind that the key is not exactly documented.
 //    NSString *adjustmentXMP = [representation.metadata objectForKey:@"AdjustmentXMP"];
-//    
+//
 //    NSData *adjustmentXMPData = [adjustmentXMP dataUsingEncoding:NSUTF8StringEncoding];
 //    NSError *__autoreleasing error = nil;
 //    CGRect extend = CGRectZero;
@@ -390,10 +390,10 @@ NSLocalizedStringFromTable(key, @"DBCamera", nil)
 //            [filter setValue:image forKey:kCIInputImageKey];
 //            image = [filter outputImage];
 //        }
-//        
+//
 //        fullResolutionImage = [context createCGImage:image fromRect:image.extent];
 //    }
-//    
+//
 //    UIImage *toReturn = [UIImage imageWithCGImage:fullResolutionImage];
 //    CGImageRelease(fullResolutionImage);
 //    return toReturn;
